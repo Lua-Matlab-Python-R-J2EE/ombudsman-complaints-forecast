@@ -2,7 +2,7 @@
 
 ## Overview
 - Forecasts daily complaint volumes for the next 90 days using 3 years of historical operational data (2023–2025).
-- Supports capacity planning, triage resourcing, and team prioritisation.
+- Supports capacity planning (deciding how much work the team can physically handle), triage resourcing (deciding who fixes urgent/unexpected issues right now), and team prioritisation (deciding which planned tasks are the most important).
 
 ---
 
@@ -37,19 +37,19 @@ jupyter notebook notebooks/pds_task.ipynb
 ```
 
 ### Reproducibility Verification
-To guarantee identical outputs, perform the following validation steps inside the Jupyter interface:
+To ensure identical outputs, perform the following validation steps inside the Jupyter interface:
 1. Click **Kernel** from the top menu bar.
 2. Select **Restart & Run All** to execute the pipeline sequentially from a fresh state.
-3. Once execution completes, the pipeline automatically saves the final clean predictions to `outputs/forecast_90_days.csv` and updates the comparative visualization display at `outputs/forecast_chart.png`.
+3. Once execution completes, the pipeline automatically saves the final clean predictions to `outputs/forecast_90_days.csv` and updates the comparative visualisation display at `outputs/forecast_chart.png`.
 
 ---
 
 ## Project Structure
 ```text
-complaints-forecast/
+ombudsman-complaints-forecast/
 ├── config.py
 ├── data/                          # Raw input dataset
-│   └── data.xlsx
+│   └── data.xlsx                  # Dataset used in this notebook
 ├── notebooks/                     # Development notebooks
 │   └── pds_task.ipynb             # Main notebook (end-to-end)
 ├── outputs/                       # Forecast CSV output
@@ -60,136 +60,137 @@ complaints-forecast/
 └── README.md
 ```
 
+--- 
+
 ## Approach & Process
 
 ### 1. Data Cleaning
 - Dropped 10 rows where target variable (`complaints`) was missing (~1% of data).
-- Forward-filled operational features (`staffing_level_fte`, `backlog_days`, `channel_mix_index`) — assumes short-term stability.
-- Dropped `centered_7d_mean` — uses future data, causes leakage.
+- Forward-filled operational features (`staffing_level_fte`, `backlog_days`, `channel_mix_index`) -> assumes short-term stability.
+- Dropped the first 7 rows of the dataset to eliminate NaN values caused by lag and rolling mean calculations.
+- Dropped `centered_7d_mean` -> uses future data, causes leakage.
 - Converted `complaints` to integer after null removal.
+
 
 ### 2. Exploratory Data Analysis
 - Trend: Clear upward trajectory: complaints grew from ~70/day (2023) to ~130/day (2025).
 - Weak bimodal seasonality: spring (Mar-May) and autumn (Oct-Nov) peaks.
-- High day-to-day variance throughout — difficult to predict individual days.
+- High day-to-day variance throughout: difficult to predict individual days.
 
 ### 3. Feature Engineering
 
 | Feature | Description |
 |---|---|
-| `day_of_week` | 0=Monday, 6=Sunday (maps weekly operational rhythms) |
-| `is_weekend` | Binary flag (1 if Saturday/Sunday, else 0; captures closure periods) |
-| `bank_holiday_flag` | Binary indicator for official public holidays and processing closures |
-| `month` | 1–12, captures macro bimodal annual seasonal patterns |
-| `year` | Integer value serving as a macro trend growth proxy |
-| `lag_1` | Yesterday's complaints (immediate demand momentum) |
-| `lag_7` | Same day last week (week-over-week operational consistency) |
-| `rolling_mean_7` | Past 7-day backward moving average (smoothed localized trend) |
+| `day_of_week` | Day of the week (0=Monday, 6=Sunday) |
+| `month` | Month of the year (1–12) to catch seasonal trends |
+| `year` | Calendar year to track long-term growth |
+| `lag_1` | Yesterday's complaint count (recent momentum) |
+| `lag_7` | Complaint count from the same day last week |
+| `rolling_mean_7` | Average complaints over the last 7 days (smooths spikes) |
 
 
-### 4. Train / Validation / Test Split (Chronological Matrix)
+### 4. Train / Validation / Test Split (By Timeline)
 
-The dataset is partitioned into strict, non-overlapping chronological segments. To preserve the time-series structure and eliminate lookahead data leakage, the splits are mapped using exact 90-day forward calendars to match the required operational forecasting horizon:
+The data is split by timeline to prevent looking ahead into the future. Each split matches our 90-day forecasting window:
 
--   **Train Set:** 2023-01-08 -to- 2025-07-04 (863 rows)
--   **Validation Set:** 2025-07-05 -to- 2025-10-02 (Exactly 90 calendar days) => out-of-sample window used for hyperparameter optimization via Optuna.
--   **Test Set:** 2025-10-03 -to- 2025-12-31 (Exactly 90 calendar days) => pristine holdout window used exclusively for final evaluation.
+-   **Train Set:** 2023-01-08 -to- 2025-07-04 (856 rows)
+-   **Validation Set:** 2025-07-05 -to- 2025-10-02 (90 calendar days): Used to tune the model via Optuna.
+-   **Test Set:** 2025-10-03 -to- 2025-12-31 (90 calendar days): Used for the final score evaluation.
 
-> Note: All 7 days of the week are preserved within these blocks. Weekends are tracked continuously using the engineered `is_weekend` flag to allow both models to natively map weekly volume reductions.*
-
+> Note: All datasets include weekends. The model uses the 'is_weekend' flag to learn that complaint volumes drop on Saturdays/Sundays.
 
 ---
 
 ## Models
 
-**Target variable:** `complaints` — daily count of complaints received
-
 ### XGBoost
-- Gradient Boosting (GB) model.
-- Hyperparameters tuned using Optuna (50 trials, minimising validation MAE).
-- 90-day forecast via recursive loop — lag features updated with each prediction.
-- Limitation: recursive forecasting causes predictions to converge toward the mean.
+- Extreme Gradient Boosting -> A tree-based machine learning model.
+- Tuned using Optuna to minimize prediction errors.
+- Forecasts 90 days ahead by feeding each prediction back into the model.
+- Drawback: Over time, predictions stop fluctuating and just stick to the training data average.
 
-**Input features:**
+**Input features/regressors:**
 
-| Feature | Description |
-|---|---|
-| `day_of_week` | 0=Monday, 6=Sunday |
-| `month` | 1–12 |
-| `year` | 2023, 2024, 2025 |
-| `is_weekend` | 1 if Saturday/Sunday, else 0 |
-| `bank_holiday_flag` | 1 if public holiday, else 0 |
-| `staffing_level_fte` | Staffing level in Full Time Equivalents (FTE) |
-| `backlog_days` | Number of days behind on resolving complaints |
-| `media_mentions` | Count of media/social mentions that day |
-| `channel_mix_index` | 0–100 index representing complaint channel distribution |
-| `lag_1` | Previous day's complaints |
-| `lag_7` | Complaints from 7 days ago |
-| `rolling_mean_7` | Average complaints over previous 7 days |
+| Feature | Description | Source |
+|---|---|---|
+| `is_weekend` | 1 if Saturday/Sunday, else 0 | Raw data |
+| `bank_holiday_flag` | 1 if public holiday, else 0 | Raw data |
+| `staffing_level_fte` | Staffing level in Full Time Equivalents (FTE) | Raw data |
+| `backlog_days` | Number of days behind on resolving complaints | Raw data |
+| `media_mentions` | Count of media/social mentions that day | Raw data |
+| `channel_mix_index` | 0–100 index representing complaint channel distribution | Raw data |
+| `day_of_week` | Day of the week (0=Monday, 6=Sunday) | Engineered |
+| `month` | Month of the year (1–12) to catch seasonal trends | Engineered |
+| `year` | Calendar year to track long-term growth | Engineered |
+| `lag_1` | Yesterday's complaint count (recent momentum) | Engineered |
+| `lag_7` | Complaint count from the same day last week | Engineered |
+| `rolling_mean_7` | Average complaints over the last 7 days (smooths spikes) | Engineered |
+| `complaints` | daily count of complaints received | **Target variable** |
 
 ### Prophet (Facebook)
-- Additive time series model — handles trend and seasonality natively.
-- Models trend and seasonality directly without requiring manual autoregressive feature matrices.
-- UK 2026 bank holidays sourced from [gov.uk](https://www.gov.uk) and injected as explicit event regressors.
-- No recursive loop needed — forecasts all 90 days in one pass.
-- Provides uncertainty intervals (`yhat_lower`, `yhat_upper`) — useful for capacity planning.
+- Handles trends and seasons automatically: No manual setup needed to track yearly or weekly patterns.
+- Fast forecasting: Predicts all 90 days at once without needing step-by-step loops.
+- Shows best and worst cases: Provides high and low prediction ranges, which helps with staffing plans.
+- Uses official UK bank holiday data: We manually feed in official holiday dates so the model knows exactly when offices are closed.
 
-**Input Matrices & Regressors:**
+**Input features/regressors:**
 
-
-| Feature / Array Name | Source | Description |
+| Feature  | Description | Source | 
 |---|---|---|
-| `ds` | Data Index | Date of observation |
-| `y` | `complaints` | Target variable — discrete daily counts |
-| `holidays` | External Dataframe | Authoritative list of UK bank holidays passed directly to isolate holiday drops |
-
+| `ds` | The specific date of the day being tracked | Calendar Date | 
+| `holidays` |  Our custom list of bank holidays used to adjust for office closures | UK Holiday List |
+| `y` or `complaints` | daily count of complaints received | **Target variable** |
 
 ---
 
 ## Evaluation & Metrics
 
-To ensure full transparency for operational directors, performance is evaluated using a targeted suite of metrics. Errors are structured to map directly to real-world frontline headcount risks:
+We evaluate performance using metrics that directly map to real-world staffing and capacity risks:
 
-*   **MAE (Mean Absolute Error) - Primary Metric:** Measures the average absolute daily case miss. Because it scales linearly and maps 1:1 to actual casework units, resource planning teams can translate this score directly into frontline staff and FTE capacity adjustments. It handles low-volume weekends safely without distorting the final baseline.
-*   **RMSE (Root Mean Squared Error) - Variance Tracker:** Squares errors before averaging, penalising large misses heavily. Comparing RMSE against MAE serves as a risk flag to check if a model is prone to catastrophic under-forecasting during high-volume demand surges.
-*   **MAPE (Mean Absolute Percentage Error) - Explicitly Rejected:** Included for reference only but completely ignored for model selection. Daily volumes drop close to zero on weekends and closures. When actual counts are tiny, minor absolute errors create exploded, artificial percentage spikes that distort true model utility.
+-   **MAE (Mean Absolute Error => Average Daily Miss => Main Metric):** Shows the average number of daily complaints the model misses. Since it maps 1:1 to actual casework volume, our planning teams can use this number directly to calculate needed staff numbers. It works reliably on low-volume weekends.
+-   **RMSE (Root Mean Squared Error => Large Error Tracker => Variance Tracker):** Focuses heavily on big mistakes. Comparing this to our main metric tells us if a model risks severely underestimating staffing needs during sudden, massive demand surges.
+-   **MAPE (Mean Absolute Percentage Error => Percentage Error => Rejected Metric):** Included only for reference but ignored for final decisions. Because weekend volumes drop close to zero, even minor errors look like massive percentage spikes, which artificially distorts the true accuracy score.
 
 ### Performance Summary Scorecard
 
-| Performance Metric | XGBoost (Tuned) | Meta Prophet | Final Winner | Operational Gain |
+| Metric | XGBoost (Tuned) | Meta Prophet | Winner | Business Benefit |
 | :--- | :---: | :---: | :---: | :--- |
-| **Mean Absolute Error (MAE)** | 29.63 | **23.47** | **Meta Prophet** | ~21% Accuracy Improvement |
-| **Root Mean Squared Error (RMSE)** | 36.32 | **29.40** | **Meta Prophet** | ~19% Reduction in Large Misses |
-| **Mean Absolute Percentage Error (MAPE)** | 34.69% | **32.85%** | **Meta Prophet** | Volatile metric (denominator instability) |
+| **Average Daily Miss (MAE)** | 29.63 | **23.47** | **Meta Prophet** | ~21% better accuracy for staff planning |
+| **Large Error Risk (RMSE)** | 36.32 | **29.40** | **Meta Prophet** | ~19% fewer surprises during high-volume spikes |
+| **Percentage Error (MAPE)** | 34.69% | **32.85%** | **Meta Prophet** | N/A – rejected due to low weekend volumes |
 
 ![Prophet vs XGBoost 90-Day Forecast](outputs/forecast_chart.png)
 
 ### Final Model Selection Decision
-**Meta Prophet is the selected production model.** It consistently outperforms the optimized XGBoost architecture across all evaluation criteria on completely unseen holdout data. 
-
-From a workforce scheduling perspective, relying on an over-smoothed point estimation introduces operational vulnerability. Meta Prophet delivers higher baseline accuracy, tracks true historical variance without suffering from the recursive smoothing degradation seen in XGBoost, and generates explicit statistical uncertainty boundaries (`yhat_lower`, `yhat_upper`) to support risk-managed capacity planning.
-
+- Meta Prophet is the stronger candidate of the two tested models. While both models still carry a high margin of error due to the noisy daily data, Meta Prophet provides a more useful baseline because it captures real fluctuations and provides clear high-and-low prediction ranges.
+- For staff scheduling, relying on a model that smooths out predictions creates tracking vulnerabilities (missing sudden volume spikes leaves teams dangerously understaffed). Meta Prophet gives better baseline accuracy because it models weekly and yearly patterns all at once instead of guessing day-by-day, captures real fluctuations, and provides explicit high-and-low prediction ranges. These best and worst-case scenarios help managers with risk-managed staff planning.
 
 ---
 
 ## Limitations
 
-1. **Recursive smoothing (XGBoost):** Forecast variance (std ~4) far lower than historical (std ~25) — lag features converge to mean after ~14 days as predictions replace real data.
-2. **Compounding errors (XGBoost):** Each recursive prediction feeds into the next — errors accumulate over the 90-day horizon, making later predictions less reliable.
-3. **Unexplained anomalies:** e.g. 2025-11-27 shows near-zero complaints with no weekend or bank holiday flag — model cannot predict unrecorded events such as system outages, strikes, or unplanned closures.
-4. **Operational features assumed stable:** `staffing_level_fte`, `backlog_days`, and `channel_mix_index` held at last known value over 90-day forecast horizon — any real changes will not be reflected in the forecast.
-5. **Media mentions assumed zero:** Future news or social media events cannot be anticipated — model will underpredict complaint volumes on high-media days.
-6. **Incomplete bank holiday flags in training data:** `2025-05-05` (Early May bank holiday) was not flagged in the source dataset — model treats this as a normal weekday during training, potentially underestimating bank holiday effects.
-7. **Bank holiday flags are approximate:** Source dataset flags were not independently verified against an authoritative calendar for all 3 years — validated against UK Gov calendar for 2026 forecast period only.
-8. **Limited Historical Data:** The total dataset spans only ~1,053 days, leaving just 863 rows for the training set after splitting. This short window restricts how robustly the models can learn long-term macro seasonal patterns.
-9. **MAPE Unreliability:** Volatile percentage spikes on low-volume weekends distort results (see full breakdown in the Evaluation & Metrics section).
-10. **XGBoost Tree Extrapolation Constraint:** In the recursive loop, the `year` feature passes a value of `2026` to the model. Because tree-based models split on historical thresholds rather than coefficients, XGBoost cannot extrapolate trends out-of-distribution. It treats 2026 exactly like the 2025 training ceiling, artificially capping and flattening the macro growth trajectory.
+### XGBoost Constraints
+1. **Loss of Detail Over Time:** The model's prediction variety drops significantly after 14 days. As it relies on its own past guesses instead of real data, the numbers quickly flatten out.
+2. **Snowballing Errors:** Because each prediction relies on the previous one, mistakes accumulate, making the final days of the 90-day forecast the least reliable.
+3. **Cannot Predict New Trends:** Tree-based models cannot project growth higher than what they have already seen. When it reads the year 2026, it caps the trend at 2025 levels, artificially flattening long-term growth. 
+   * **Alternative Solution:** Could use a Hybrid Model, which combines a trend-tracking model (like Prophet or Linear Regression) with XGBoost so growth and daily spikes are predicted together.
 
+### Data Gaps & Assumptions
+4. **Unexplained Drops (Both Models):** The models cannot predict random events like IT system outages or strikes that cause complaint numbers to drop to zero on normal workdays.
+5. **Missing Data History (Both Models):** The dataset only spans about 3 years, leaving fewer than 900 days for training. This short window makes it harder for both models to learn reliable, long-term yearly patterns.
+6. **Static Staffing and Backlogs:** XGBoost assumes the staff levels and backlogs will stay exactly the same for the next 90 days. **Meta Prophet Advantage:** Completely unaffected because it bypasses these operational features entirely and relies purely on time patterns.
+7. **No Future News Tracking:** XGBoost assumes there will be zero social media or news mentions in the future, meaning it will under-forecast if a major public PR event occurs. **Meta Prophet Advantage:** Completely unaffected because it does not use media features to build its predictions.
+
+### Holiday Flaws
+8. **Missing Holiday Flags:** A real bank holiday in May 2025 was accidentally missed in the source data. This confuses the model about how much holidays actually reduce volumes.
+9. **Unverified Historical Calendars:** Holiday flags for 2023–2025 were taken as-is from the data without double-checking. Only the upcoming 2026 forecast holidays were verified against official government calendars.
+
+### Metric Flaws
+10. **Misleading Percentage Scores:** Percentage error breaks down when actual numbers are very small. **Example:** If the office receives only 2 complaints on a Sunday and the model guesses 6, it is only off by 4 cases. However, mathematically, this registers as a massive **200% error spike**. Averaging these artificial spikes makes the model look far worse than it actually is.
 
 ---
 
 ## Abbreviations
-
 
 | Abbreviation | Full Form |
 |---|---|
