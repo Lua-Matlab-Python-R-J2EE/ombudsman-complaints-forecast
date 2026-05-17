@@ -11,23 +11,28 @@
 Follow these steps to clone the repository, set up an isolated virtual environment, install dependencies, and run the pipeline from scratch:
 
 ```bash
-# 1. Open your terminal and navigate to your preferred workspace directory (e.g., a TEST folder)
+# 1. Navigate to your preferred workspace directory (e.g., a TEST folder)
 cd /path/to/your/TEST
 
-# 2. Clone the repository (this creates the correct project folder inside your workspace)
-git clone https://github.com
+# 2. Download the project files directly from your repository
+git clone https://github.com/Lua-Matlab-Python-R-J2EE/ombudsman-complaints-forecast
+
+# 3. Move your terminal inside the downloaded project folder
 cd ombudsman-complaints-forecast
 
-# 3. Create a clean, isolated virtual environment inside the project folder
+# 4. Create an isolated virtual environment to prevent package conflicts
 python3 -m venv test_env
+
+# 5. Activate the virtual environment
 source test_env/bin/activate
 
-# 4. Upgrade package installer and install project dependencies
+# 6. Upgrade the package installer and install all project dependencies
 pip install --upgrade pip
 pip install -r requirements.txt
 
-# 5. Launch the notebook environment
+# 7. Launch the notebook environment
 jupyter notebook notebooks/pds_task.ipynb
+
 ```
 
 ### Reproducibility Verification
