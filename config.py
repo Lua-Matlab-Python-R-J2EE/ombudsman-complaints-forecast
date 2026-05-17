@@ -1,0 +1,1 @@
+# Configuration settings for the forecasting pipeline (reserved for future use)
