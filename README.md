@@ -14,7 +14,7 @@ Follow these steps to clone the repository, set up an isolated virtual environme
 # 1. Navigate to your preferred workspace directory (e.g., a TEST folder)
 cd /path/to/your/TEST
 
-# 2. Download the project files directly from your repository
+# 2. Download the project files directly from the GitHub repository
 git clone https://github.com/Lua-Matlab-Python-R-J2EE/ombudsman-complaints-forecast
 
 # 3. Move your terminal inside the downloaded project folder
@@ -26,9 +26,10 @@ python3 -m venv test_env
 # 5. Activate the virtual environment
 source test_env/bin/activate
 
-# 6. Upgrade the package installer and install all project dependencies
+# 6. Upgrade the package installer, install dependencies, and ensure Jupyter is available
 pip install --upgrade pip
 pip install -r requirements.txt
+pip install notebook
 
 # 7. Launch the notebook environment
 jupyter notebook notebooks/pds_task.ipynb
