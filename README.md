@@ -125,7 +125,7 @@ jupyter notebook notebooks/pds_task.ipynb
 To ensure identical outputs, perform the following validation steps inside the Jupyter interface:
 1. Click **Kernel** from the top menu bar.
 2. Select **Restart & Run All** to execute the pipeline sequentially from a fresh state.
-3. Once execution completes, the pipeline automatically saves the final clean predictions to `outputs/forecast_90_days.csv` and updates the comparative visualisation display at `outputs/forecast_chart.png`.
+3. Once execution completes, the pipeline automatically saves the final clean predictions to `outputs/forecast_90_days.csv`.
 
 ---
 
