@@ -6,35 +6,102 @@
 
 ---
 
-## Quick Start & Reproducibility
+## Quick Start & Installation Instructions for Reproducibility
 
 Follow these steps to clone the repository, set up an isolated virtual environment, install dependencies, and run the pipeline from scratch:
 
-```bash
-# 1. Navigate to your preferred workspace directory (e.g., a TEST folder)
-cd /path/to/your/TEST
+### Windows (Command Prompt)
 
-# 2. Download the project files directly from the GitHub repository
+```cmd
+:: ==============================================================================
+:: STEP 1: NAVIGATE AND CLONE THE REPOSITORY
+:: ==============================================================================
+:: 1. Change directory to your preferred workspace
+cd C:\path\to\your\TEST
+
+:: 2. Clone the project repository from GitHub
 git clone https://github.com/Lua-Matlab-Python-R-J2EE/ombudsman-complaints-forecast
 
-# 3. Move your terminal inside the downloaded project folder
+:: 3. Enter the project directory
 cd ombudsman-complaints-forecast
 
-# 4. Create an isolated virtual environment to prevent package conflicts
-python3 -m venv test_env
+:: ==============================================================================
+:: STEP 2: CREATE AND ACTIVATE VIRTUAL ENVIRONMENT
+:: ==============================================================================
+python -m venv test_env
+test_env\Scripts\activate.bat
 
-# 5. Activate the virtual environment
-source test_env/bin/activate
-
-# 6. Upgrade the package installer, install dependencies, and ensure Jupyter is available
+:: ==============================================================================
+:: STEP 3: INSTALL DEPENDENCIES AND LAUNCH
+:: ==============================================================================
 pip install --upgrade pip
 pip install -r requirements.txt
 pip install notebook
-
-# 7. Launch the notebook environment
 jupyter notebook notebooks/pds_task.ipynb
-
 ```
+
+### macOS
+
+```bash
+# ==============================================================================
+# STEP 1: NAVIGATE AND CLONE THE REPOSITORY
+# ==============================================================================
+# 1. Change directory to your preferred workspace
+cd /path/to/your/TEST
+
+# 2. Clone the project repository from GitHub
+git clone https://github.com/Lua-Matlab-Python-R-J2EE/ombudsman-complaints-forecast
+
+# 3. Enter the project directory
+cd ombudsman-complaints-forecast
+
+# ==============================================================================
+# STEP 2: CREATE AND ACTIVATE VIRTUAL ENVIRONMENT
+# ==============================================================================
+python3 -m venv test_env
+source test_env/bin/activate
+
+# ==============================================================================
+# STEP 3: INSTALL DEPENDENCIES AND LAUNCH
+# ==============================================================================
+pip install --upgrade pip
+pip install -r requirements.txt
+pip install notebook
+jupyter notebook notebooks/pds_task.ipynb
+```
+
+### Linux
+
+```bash
+# ==============================================================================
+# STEP 1: NAVIGATE AND CLONE THE REPOSITORY
+# ==============================================================================
+# 1. Change directory to your preferred workspace
+cd /path/to/your/TEST
+
+# 2. Clone the project repository from GitHub
+git clone https://github.com/Lua-Matlab-Python-R-J2EE/ombudsman-complaints-forecast
+
+# 3. Enter the project directory
+cd ombudsman-complaints-forecast
+
+# ==============================================================================
+# STEP 2: CREATE AND ACTIVATE VIRTUAL ENVIRONMENT
+# ==============================================================================
+python3 -m venv test_env
+source test_env/bin/activate
+
+# ==============================================================================
+# STEP 3: INSTALL DEPENDENCIES AND LAUNCH
+# ==============================================================================
+pip install --upgrade pip
+pip install -r requirements.txt
+pip install notebook
+jupyter notebook notebooks/pds_task.ipynb
+```
+
+---
+
 
 ### Reproducibility Verification
 To ensure identical outputs, perform the following validation steps inside the Jupyter interface:
