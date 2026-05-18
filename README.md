@@ -28,15 +28,21 @@ cd ombudsman-complaints-forecast
 :: ==============================================================================
 :: STEP 2: CREATE AND ACTIVATE VIRTUAL ENVIRONMENT
 :: ==============================================================================
+:: 4. Create an isolated virtual environment to prevent package conflicts
 python -m venv test_env
+
+:: 5. Activate the virtual environment
 test_env\Scripts\activate.bat
 
 :: ==============================================================================
 :: STEP 3: INSTALL DEPENDENCIES AND LAUNCH
 :: ==============================================================================
+:: 6. Upgrade the package installer, install dependencies, and ensure Jupyter is available
 pip install --upgrade pip
 pip install -r requirements.txt
 pip install notebook
+
+:: 7. Launch the notebook environment
 jupyter notebook notebooks/pds_task.ipynb
 ```
 
@@ -58,15 +64,21 @@ cd ombudsman-complaints-forecast
 # ==============================================================================
 # STEP 2: CREATE AND ACTIVATE VIRTUAL ENVIRONMENT
 # ==============================================================================
+# 4. Create an isolated virtual environment to prevent package conflicts
 python3 -m venv test_env
+
+# 5. Activate the virtual environment
 source test_env/bin/activate
 
 # ==============================================================================
 # STEP 3: INSTALL DEPENDENCIES AND LAUNCH
 # ==============================================================================
+# 6. Upgrade the package installer, install dependencies, and ensure Jupyter is available
 pip install --upgrade pip
 pip install -r requirements.txt
 pip install notebook
+
+# 7. Launch the notebook environment
 jupyter notebook notebooks/pds_task.ipynb
 ```
 
@@ -88,15 +100,21 @@ cd ombudsman-complaints-forecast
 # ==============================================================================
 # STEP 2: CREATE AND ACTIVATE VIRTUAL ENVIRONMENT
 # ==============================================================================
+# 4. Create an isolated virtual environment to prevent package conflicts
 python3 -m venv test_env
+
+# 5. Activate the virtual environment
 source test_env/bin/activate
 
 # ==============================================================================
 # STEP 3: INSTALL DEPENDENCIES AND LAUNCH
 # ==============================================================================
+# 6. Upgrade the package installer, install dependencies, and ensure Jupyter is available
 pip install --upgrade pip
 pip install -r requirements.txt
 pip install notebook
+
+# 7. Launch the notebook environment
 jupyter notebook notebooks/pds_task.ipynb
 ```
 
