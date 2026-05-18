@@ -46,7 +46,7 @@ pip install notebook
 jupyter notebook notebooks/pds_task.ipynb
 ```
 
-### macOS
+### macOS (Terminal)
 
 ```bash
 # ==============================================================================
@@ -82,7 +82,7 @@ pip install notebook
 jupyter notebook notebooks/pds_task.ipynb
 ```
 
-### Linux
+### Linux (Terminal)
 
 ```bash
 # ==============================================================================
