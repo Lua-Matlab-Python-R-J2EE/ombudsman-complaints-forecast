@@ -267,7 +267,7 @@ We evaluate performance using metrics that directly map to real-world staffing a
 7. **No Future News Tracking:** XGBoost assumes there will be zero social media or news mentions in the future, meaning it will under-forecast if a major public PR event occurs. **Meta Prophet Advantage:** Completely unaffected because it does not use media features to build its predictions.
 
 ### Holiday Flaws
-8. **Missing Holiday Flags:** A real bank holiday in May 2025 was accidentally missed in the source data. This confuses the model about how much holidays actually reduce volumes.
+8. **Incorrect Bank Holiday Flags:** The source data contains multiple errors regarding bank holiday flagging across 2023 and 2025. Specifically, three rows in 2023 have inverted flags (e.g., mislabeling New Year's Day and King Charles III's Coronation holiday), and a May 2025 bank holiday was completely missed. These inaccuracies confuse the model regarding how holidays impact volume drops.
 9. **Unverified Historical Calendars:** Holiday flags for 2023–2025 were taken as-is from the data without double-checking. Only the upcoming 2026 forecast holidays were verified against official government calendars.
 
 ### Metric Flaws
