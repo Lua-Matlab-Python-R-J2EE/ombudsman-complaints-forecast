@@ -1,5 +1,7 @@
 # Complaint Volume Forecasting
-[![Open In Colab](https://google.com)](https://google.com)
+[👉 Click Here to Open this Notebook in Google Colab](https://colab.research.google.com
+/github/Lua-Matlab-Python-R-J2EE/ombudsman-complaints-forecast/blob/main/
+notebooks/pds_task.ipynb)
 
 ## Overview
 - Forecasts daily complaint volumes for the next 90 days using 3 years of historical operational data (2023–2025).
