@@ -179,9 +179,9 @@ ombudsman-complaints-forecast/
 
 The data is split by timeline to prevent looking ahead into the future. Each split matches our 90-day forecasting window:
 
--   **Train Set:** 2023-01-08 -to- 2025-07-04 (856 rows)
--   **Validation Set:** 2025-07-05 -to- 2025-10-02 (90 calendar days): Used to tune the model via Optuna.
--   **Test Set:** 2025-10-03 -to- 2025-12-31 (90 calendar days): Used for the final score evaluation.
+-   **Train Set:** 2023-01-08 -to- 2025-06-27 (856 rows)
+-   **Validation Set:** 2025-06-28 -to- 2025-09-29 (90 calendar days): Used to tune the model via Optuna.
+-   **Test Set:** 2025-09-30 -to- 2025-12-31 (90 calendar days): Used for the final score evaluation.
 
 > Note: All datasets include weekends. The model uses the 'is_weekend' flag to learn that complaint volumes drop on Saturdays/Sundays.
 
