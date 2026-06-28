@@ -228,6 +228,12 @@ The data is split by timeline to prevent looking ahead into the future. Each spl
 | `holidays` |  Our custom list of bank holidays used to adjust for office closures | UK Holiday List |
 | `y` or `complaints` | daily count of complaints received | **Target variable** |
 
+> **Note — Holiday Data Handling:** Both models rely on the same `bank_holidays_2026` date list, but each consumes it in a different format:
+> - **XGBoost** uses `bank_holiday_flag` — a simple 0/1 column checked day-by-day (`1 if current_date in bank_holidays_2026 else 0`) and fed in as one of its 12 input features.
+> - **Prophet** uses `bank_hols_dataframe` — a separate 2-column table (`holiday` name + `ds` date) built from the same date list, passed into its `holidays=` parameter so Prophet can model holiday effects internally.
+>
+> Same source dates, two different formats — XGBoost needs a flat numeric feature, while Prophet requires a structured holiday table.
+> 
 ---
 
 ## Evaluation & Metrics
