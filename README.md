@@ -194,6 +194,7 @@ The data is split by timeline to prevent looking ahead into the future. Each spl
 - Tuned using Optuna to minimize prediction errors.
 - Forecasts 90 days ahead by feeding each prediction back into the model.
 - Drawback: Over time, predictions stop fluctuating and just stick to the training data average.
+- Uses official UK bank holiday data: Same manually-fed 2026 holiday list shared with Prophet, so XGBoost also knows exactly when offices are closed.
 
 **Input features/regressors:**
 
