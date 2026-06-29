@@ -255,7 +255,7 @@ We evaluate performance using metrics that directly map to real-world staffing a
 ![Prophet vs XGBoost 90-Day Forecast](outputs/forecast_chart.png)
 
 ### Final Model Selection Decision
-- Meta Prophet is the stronger candidate of the two tested models. While both models still carry a high margin of error due to the noisy daily data, Meta Prophet provides a more useful baseline because it captures real fluctuations and provides clear high-and-low prediction ranges.
+- While both models still carry high prediction error (MAE ~24-30) due to noisy daily data, Meta Prophet provides a more useful baseline because it captures real fluctuations and provides clear high-and-low prediction ranges — something XGBoost does not calculate.
 - For staff scheduling, relying on a model that smooths out predictions creates tracking vulnerabilities (missing sudden volume spikes leaves teams dangerously understaffed). Meta Prophet gives better baseline accuracy because it models weekly and yearly patterns all at once instead of guessing day-by-day, captures real fluctuations, and provides explicit high-and-low prediction ranges. These best and worst-case scenarios help managers with risk-managed staff planning.
 
 ---
